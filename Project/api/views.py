@@ -1,20 +1,22 @@
-from rest_framework.response import Response
+import nmap
+from django.http import JsonResponse
 from rest_framework.decorators import api_view
+from rest_framework.response import Response
 from base.models import Item
-from .serializers import ItemSerializer
+import subprocess
 
-@api_view(['GET', 'POST'])
 # Create your views here.
-def getData(request):
-    items = Item.objects.all()
-    serializer = ItemSerializer(items, many=True)
-    return Response(serializer.data)
+@api_view(['GET'])
+def nmap_scan(request, ip_address):
+    # Create nmap object.
+    scanner = nmap.PortScanner()
 
-def addItem(request):
-    serializer = ItemSerializer(data=request.data)
-    if serializer.is_valid():
-        serializer.save()
-    return Response(serializer.data)
+    # Store nmap scan.
+    scanner.scan('192.168.0.45', arguments='-sS -sV -O')
+    hosts = scanner.all_hosts()
+    result = scanner.pdf()
+    return Response({'hosts': hosts, 'result': result})
+
 
 def run_command(request):
     command = "ls -l /var/log"
